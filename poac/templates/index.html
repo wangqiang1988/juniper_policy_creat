@@ -298,11 +298,68 @@ $("poac-form").addEventListener("submit", async (e) => {
 });
 
 // --- Copy / download ------------------------------------------------------
+async function copyToClipboard(text) {
+  // Path 1: modern async Clipboard API (HTTPS / localhost only)
+  if (navigator.clipboard && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (e) {
+      // fall through
+    }
+  }
+  // Path 2: hidden textarea + execCommand (works on http://192.168.x.x, file://, etc.)
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.setAttribute("readonly", "");
+  ta.style.position = "fixed";
+  ta.style.top = "0";
+  ta.style.left = "0";
+  ta.style.width = "1px";
+  ta.style.height = "1px";
+  ta.style.opacity = "0";
+  ta.style.pointerEvents = "none";
+  document.body.appendChild(ta);
+  const prevActive = document.activeElement;
+  ta.focus();
+  ta.select();
+  ta.setSelectionRange(0, text.length);
+  let ok = false;
+  try {
+    ok = document.execCommand("copy");
+  } catch (e) {
+    ok = false;
+  }
+  document.body.removeChild(ta);
+  if (prevActive && prevActive.focus) prevActive.focus();
+  return ok;
+}
+
 $("copy-btn").addEventListener("click", async () => {
-  await navigator.clipboard.writeText($("output").textContent);
+  const text = $("output").textContent;
+  if (!text || text === "Fill the form and click Generate.") {
+    $("copy-btn").textContent = "Nothing to copy";
+    setTimeout(() => ($("copy-btn").textContent = "Copy to clipboard"), 1500);
+    return;
+  }
+  const ok = await copyToClipboard(text);
   const orig = $("copy-btn").textContent;
-  $("copy-btn").textContent = "Copied ✓";
-  setTimeout(() => ($("copy-btn").textContent = orig), 1500);
+  if (ok) {
+    $("copy-btn").textContent = "Copied ✓";
+    setTimeout(() => ($("copy-btn").textContent = orig), 1500);
+  } else {
+    // Last resort: highlight the output so the user can press Ctrl+C
+    const range = document.createRange();
+    range.selectNodeContents($("output"));
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    $("copy-btn").textContent = "Press Ctrl+C";
+    setTimeout(() => {
+      $("copy-btn").textContent = orig;
+      sel.removeAllRanges();
+    }, 3000);
+  }
 });
 $("download-btn").addEventListener("click", () => {
   const blob = new Blob([$("output").textContent], { type: "text/plain" });
