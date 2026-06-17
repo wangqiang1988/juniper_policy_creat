@@ -1,0 +1,23 @@
+# docker-compose file compatible with both v1 (docker-compose) and v2 (docker compose)
+services:
+  web:
+    build: .
+    image: juniper-policy-generator:latest
+    container_name: juniper-policy-generator
+    ports:
+      - "8000:8000"
+    environment:
+      # Override the listening port if you change EXPOSE/CMD in the Dockerfile
+      - TZ=UTC
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2).status == 200 else sys.exit(1)"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    # Optional: mount source for live-reload during development.
+    # Uncomment to override the baked-in code.
+    # volumes:
+    #   - ./juniper_policy_generator:/app/juniper_policy_generator:ro
+    #   - ./app.py:/app/app.py:ro

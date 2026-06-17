@@ -23,6 +23,12 @@ async def index(request: Request) -> object:
     return templates.TemplateResponse(request, "index.html")
 
 
+@app.get("/health")
+async def health() -> dict:
+    """Lightweight liveness probe used by Docker HEALTHCHECK."""
+    return {"status": "ok"}
+
+
 @app.post("/preview")
 async def preview(request: Request) -> JSONResponse:
     """Live normalization preview for a single textarea field.

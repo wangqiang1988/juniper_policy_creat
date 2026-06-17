@@ -1,0 +1,31 @@
+# Files excluded from the Docker build context
+
+# Git
+.git
+.gitignore
+
+# Python (rebuilt inside the image)
+.venv
+__pycache__
+.pytest_cache
+*.py[oc]
+*.egg-info
+dist
+build
+wheels
+
+# Editor / OS
+.vscode
+.idea
+.DS_Store
+*.swp
+
+# Tests (the image ships production code; tests run in CI/dev)
+tests
+
+# Docs / examples / local config (not needed at runtime)
+README.md
+*.md
+examples
+.env
+.env.*

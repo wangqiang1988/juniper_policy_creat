@@ -15,11 +15,13 @@ It does **not** connect to your SRX. It only generates text.
 
 ## Quick start
 
+### Option A — Local Python (with `uv`)
+
 ```bash
 # 1. Install dependencies
-uv sync
+uv sync --dev
 
-# 2. Run the test suite (should be 58 passed)
+# 2. Run the test suite (should be 66 passed)
 uv run pytest
 
 # 3. Start the web app
@@ -27,6 +29,27 @@ uv run uvicorn app:app --reload --host 0.0.0.0 --port 8000
 
 # 4. Open in browser
 #    http://localhost:8000
+```
+
+### Option B — Docker
+
+```bash
+# Build and run with docker compose (recommended)
+docker compose up --build
+
+# Or plain docker
+docker build -t juniper-policy-generator .
+docker run --rm -p 8000:8000 juniper-policy-generator
+
+# Open in browser
+#    http://localhost:8000
+```
+
+The image is multi-stage: builder compiles deps into a venv, runtime stage copies the venv + source into a minimal `python:3.12-slim` image and runs as a non-root user. It includes a `/health` endpoint and a `HEALTHCHECK` directive so `docker ps` shows healthy status.
+
+To expose on a different port:
+```bash
+docker run --rm -p 9000:8000 juniper-policy-generator   # host 9000 -> container 8000
 ```
 
 That's it. Fill the form, click **Generate set commands**, copy the output, paste into your SRX.
